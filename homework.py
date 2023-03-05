@@ -49,7 +49,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """ Отправление сообщений в чат телеграма."""
+    """Отправление сообщений в чат телеграма."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Отправлено сообщение.')
