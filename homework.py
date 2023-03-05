@@ -33,10 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_tokens():
-    """
-    Проверяется доступность локальных переменных
-    и возвращается булева переменная.
-    """
+    """Проверяется доступность локальных переменных."""
     token_dict = {
         PRACTICUM_TOKEN: 'PRACTICUM_TOKEN',
         TELEGRAM_TOKEN: 'TELEGRAM_TOKEN',
@@ -52,10 +49,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """
-    Отправление в чат телеграмма сообщений об ошибках
-    и статуса домашней работы.
-    """
+    """ Отправление сообщений в чат телеграма."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Отправлено сообщение.')
@@ -64,9 +58,8 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """
-    Get запрос к API практикум с возвратом полученного ответа
-    или возникшей ошибки.
+    """Get запрос к API практикум.
+    Приводит ответ к данным питон.
     """
     payload = {'from_date': timestamp}
     try:
