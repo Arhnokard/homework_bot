@@ -1,4 +1,7 @@
-import logging, os, sys, time
+import logging
+import os
+import sys
+import time
 from http import HTTPStatus
 
 from dotenv import load_dotenv
@@ -31,15 +34,16 @@ logger = logging.getLogger(__name__)
 
 def check_tokens():
     '''Проверяется доступность локальных переменных
-    и возвращается булева переменная'''
+    и возвращается булева переменная.'''
     token_dict = {
         PRACTICUM_TOKEN: 'PRACTICUM_TOKEN',
         TELEGRAM_TOKEN: 'TELEGRAM_TOKEN',
         TELEGRAM_CHAT_ID: 'TELEGRAM_CHAT_ID'
-    }   
+    }
     for token in token_dict.keys():
         if not token:
-            logger.critical(f'Отсусттвует переменная окружения {token_dict[token]}')
+            logger.critical('Отсусттвует переменная окружения'
+                            f' {token_dict[token]}')
             return False
     logger.debug('Переменные окружения проверенны')
     return True
@@ -47,7 +51,7 @@ def check_tokens():
 
 def send_message(bot, message):
     '''Отправление в чат телеграмма сообщений об ошибках
-    и статуса домашней работы'''
+    и статуса домашней работы.'''
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Отправлено сообщение.')
@@ -57,7 +61,7 @@ def send_message(bot, message):
 
 def get_api_answer(timestamp):
     '''Get запрос к API практикум с возвратом полученного ответа
-    или возникшей ошибки'''
+    или возникшей ошибки.'''
     payload = {'from_date': timestamp}
     try:
         logger.debug('Запрос к API')
@@ -74,20 +78,20 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    '''Проверяет полученный ответ от API на соответствие документации'''
+    '''Проверяет полученный ответ от API на соответствие документации.'''
     if not isinstance(response, dict):
         raise TypeError('Полученные данные не являются словарем')
     elif not ('current_date' and 'homeworks' in response):
         raise KeyError('Отсутствуют ожидаемые ключи')
     elif not isinstance(response['homeworks'], list):
         raise TypeError('Данные homeworks не являются list')
-    elif response['homeworks']==[]:
+    elif response['homeworks'] == []:
         raise ListNone('Отсутствует информация о домашнем задании')
     return response['homeworks']
 
 
 def parse_status(homework):
-    '''Извлечение из домашней работы статуса ревью'''
+    '''Извлечение из домашней работы статуса ревью.'''
     if not 'homework_name' in homework:
         raise HomeworkKeyError('В ответе API отсутствует ключ homework_name')
     homework_name = homework['homework_name']
@@ -103,8 +107,8 @@ def parse_status(homework):
 
 
 def send_error_message(bot, old_mes, new_mes):
-    '''Регулирует и фильтрует отправку сообщений об ошибках в телеграм '''
-    if old_mes !=new_mes:
+    '''Регулирует и фильтрует отправку сообщений об ошибках в телеграм.'''
+    if old_mes != new_mes:
         send_message(bot, new_mes)
         return new_mes
 
