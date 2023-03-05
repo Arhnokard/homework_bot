@@ -33,7 +33,8 @@ logger = logging.getLogger(__name__)
 
 
 def check_tokens():
-    """Проверяется доступность локальных переменных
+    """
+    Проверяется доступность локальных переменных
     и возвращается булева переменная.
     """
     token_dict = {
@@ -51,7 +52,8 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """Отправление в чат телеграмма сообщений об ошибках
+    """
+    Отправление в чат телеграмма сообщений об ошибках
     и статуса домашней работы.
     """
     try:
@@ -62,7 +64,8 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """Get запрос к API практикум с возвратом полученного ответа
+    """
+    Get запрос к API практикум с возвратом полученного ответа
     или возникшей ошибки.
     """
     payload = {'from_date': timestamp}
@@ -95,7 +98,7 @@ def check_response(response):
 
 def parse_status(homework):
     """Извлечение из домашней работы статуса ревью."""
-    if not 'homework_name' in homework:
+    if 'homework_name' not in homework:
         raise HomeworkKeyError('В ответе API отсутствует ключ homework_name')
     homework_name = homework['homework_name']
     if homework['status'] == []:
