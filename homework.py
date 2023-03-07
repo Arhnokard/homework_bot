@@ -113,7 +113,7 @@ def parse_status(homework):
 
 def message_filter(bot, old_mes, new_mes):
     """Регулирует и фильтрует отправку сообщений об ошибках в телеграм."""
-    if new_mes != None and old_mes != new_mes:
+    if (new_mes != None) and (old_mes != new_mes):
         if send_message(bot, new_mes):
             return new_mes
     return old_mes
