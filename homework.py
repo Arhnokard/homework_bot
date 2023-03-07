@@ -53,8 +53,10 @@ def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Отправлено сообщение.')
+        return True
     except telegram.TelegramError as error:
         logger.error(f'Не удалось отправить сообщение. Ошибка: {error}')
+        return False
 
 
 def get_api_answer(timestamp):
@@ -67,24 +69,29 @@ def get_api_answer(timestamp):
         response = requests.get(ENDPOINT, headers=HEADERS, params=payload)
     except requests.RequestException as exception:
         logger.error(exception)
+        raise Exception(f'Ошибка при обращение к {ENDPOINT}')
     if response.status_code != HTTPStatus.OK:
         raise StatusCodeError(f'Ошибка при запросе к {ENDPOINT}, '
                               f'статус {response.status_code}, '
                               f'параметры запроса timastamp={timestamp}, '
                               f'ответ сервера: {response.text}')
     logger.debug('Получен ответ от API')
-    return response.json()
+    try:
+        return response.json()
+    except requests.JSONDecodeError as JSON_error:
+        logger.error('Ошибка при попытке приведения JSON к читаемым данным')
+        raise JSON_error
 
 
 def check_response(response):
     """Проверяет полученный ответ от API на соответствие документации."""
     if not isinstance(response, dict):
         raise TypeError('Полученные данные не являются словарем')
-    elif not ('current_date' and 'homeworks' in response):
+    if not ('current_date' in response and 'homeworks' in response):
         raise KeyError('Отсутствуют ожидаемые ключи')
-    elif not isinstance(response['homeworks'], list):
+    if not isinstance(response['homeworks'], list):
         raise TypeError('Данные homeworks не являются list')
-    elif response['homeworks'] == []:
+    if response['homeworks'] == []:
         raise ListNone('Отсутствует информация о домашнем задании')
     return response['homeworks']
 
@@ -98,18 +105,18 @@ def parse_status(homework):
         raise ListNone('Cтатус домашней работы пуст')
     if not homework['status'] in HOMEWORK_VERDICTS:
         raise KeyError('Ошибка: незадокументированный статус домашней работы')
-    else:
-        logger.debug('Полученные данные с API соответствуют документации')
-        verdict = HOMEWORK_VERDICTS[homework['status']]
-        return ('Изменился статус проверки работы'
-                f' "{homework_name}". {verdict}')
+    logger.debug('Полученные данные с API соответствуют документации')
+    verdict = HOMEWORK_VERDICTS[homework['status']]
+    return ('Изменился статус проверки работы'
+            f' "{homework_name}". {verdict}')
 
 
-def send_error_message(bot, old_mes, new_mes):
+def message_filter(bot, old_mes, new_mes):
     """Регулирует и фильтрует отправку сообщений об ошибках в телеграм."""
-    if old_mes != new_mes:
-        send_message(bot, new_mes)
-        return new_mes
+    if new_mes != None and old_mes != new_mes:
+        if send_message(bot, new_mes):
+            return new_mes
+    return old_mes
 
 
 def main():
@@ -132,26 +139,27 @@ def main():
             response = get_api_answer(timestamp)
             check = check_response(response)
             timestamp = response['current_date']
-            message = parse_status(check[0])
-            send_message(bot, message)
+            new_message = parse_status(check[0])
+            message = message_filter(bot, message, new_message)
         except StatusCodeError as error:
             logger.error(error)
-            message = send_error_message(bot, message, str(error))
-        except TypeError as type:
-            logger.error(type)
-            message = send_error_message(bot, message, str(type))
+            message = message_filter(bot, message, str(error))
+        except TypeError as type_error:
+            logger.error(type_error)
+            message = message_filter(bot, message, str(type_error))
         except ListNone as list:
             logger.error(list)
-            message = send_error_message(bot, message, str(list))
+            message = message_filter(bot, message, str(list))
         except KeyError as key:
             logger.error(key)
-            message = send_error_message(bot, message, str(key))
+            message = message_filter(bot, message, str(key))
         except HomeworkKeyError as home_key:
             logger.error(home_key)
-            message = send_error_message(bot, message, str(home_key))
+            message = message_filter(bot, message, str(home_key))
         except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            logger.error(message)
+            error_message = f'Сбой в работе программы: {error}'
+            logger.error(error_message)
+            message = message_filter(bot, message, error_message)
         finally:
             time.sleep(RETRY_PERIOD)
 
