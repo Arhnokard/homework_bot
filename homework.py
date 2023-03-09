@@ -141,21 +141,10 @@ def main():
             timestamp = response['current_date']
             new_message = parse_status(check[0])
             message = message_filter(bot, message, new_message)
-        except StatusCodeError as error:
+        except (StatusCodeError, TypeError, ListNone,
+                KeyError, HomeworkKeyError) as error:
             logger.error(error)
             message = message_filter(bot, message, str(error))
-        except TypeError as type_error:
-            logger.error(type_error)
-            message = message_filter(bot, message, str(type_error))
-        except ListNone as list:
-            logger.error(list)
-            message = message_filter(bot, message, str(list))
-        except KeyError as key:
-            logger.error(key)
-            message = message_filter(bot, message, str(key))
-        except HomeworkKeyError as home_key:
-            logger.error(home_key)
-            message = message_filter(bot, message, str(home_key))
         except Exception as error:
             error_message = f'Сбой в работе программы: {error}'
             logger.error(error_message)
